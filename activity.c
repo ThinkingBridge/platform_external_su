@@ -16,6 +16,7 @@
 */
 
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -116,6 +117,14 @@ int send_intent(struct su_context *ctx, allow_t allow, const char *action)
         PLOGE("fork");
         return -1;
     }
-    ctx->child = pid;
+    if (ctx->child) {
+        PLOGE("ctx->child should be null but it's %d", ctx->child);
+        exit(EXIT_FAILURE);
+    }
+    if (allow != INTERACTIVE) {
+        waitpid(pid, NULL, 0);
+        signal(SIGCHLD, SIG_DFL);
+    } else
+        ctx->child = pid;
     return 0;
 }
